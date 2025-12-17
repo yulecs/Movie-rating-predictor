@@ -48,8 +48,8 @@ genre_cols = [
 data["year"] = data["title"].str.extract(r"\((\d{4})\)")
 data["year"] = data["year"].astype(float)
 
-X = data[genre_cols + ["num_ratings"]]
-
+feature_cols = genre_cols + ["year"]
+X = data[feature_cols]
 y = data["avg_rating"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y)
@@ -58,8 +58,32 @@ model = RandomForestRegressor()
 
 model.fit(X_train, y_train)
 
-preds = model.predict(X_test)
-rmse = root_mean_squared_error(y_test, preds)
-print(rmse)
+def predict_movie_rating(genres, year):
+    # Start with all-zero features
+    input_data = {col: 0 for col in feature_cols}
+    
+    # Set genres
+    for genre in genres:
+        if genre in input_data:
+            input_data[genre] = 1
+    
+    # Set year
+    input_data["year"] = year
+    
+    # Convert to DataFrame (IMPORTANT)
+    X_new = pd.DataFrame([input_data])
+    
+    # Predict
+    predicted_rating = model.predict(X_new)[0]
+    
+    return predicted_rating
+
+pred = predict_movie_rating(
+    genres=["Romance", "Comedy", "Sci-Fi", "Animation", "Fantasy"],
+    year=2022
+)
+
+print(f"Predicted rating: {pred:.2f}")
+
 
 
